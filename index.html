@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>d3-util Test Page</title>
+    <script src="source/d3-v3.5.17.min.js"></script>
+    <script src="d3-util.js"></script>
+</head>
+<body>
+
+   <style>
+       svg{
+           display: none;
+       }
+    </style>
+    <div id="container"></div>
+
+<script>
+    
+    //var box = d3.util.getTBox(["Lorem ipsum", "dolor sit amet,", "consectetur."]);
+    var box = d3.util.getTBox("Lorem ipsum dolor sit amet, consectetur.");
+    console.log(box);
+</script>
+</body>
+</html>
