@@ -7,19 +7,48 @@
     <script src="d3-util.js"></script>
 </head>
 <body>
-
-   <style>
-       svg{
-           display: none;
-       }
-    </style>
     <div id="container"></div>
-
 <script>
+    var cc = d3.scale.category10();
+    var dd = [
+        "Lorem ipsum dolor sit amet, consectetur adipisicing elit",
+         "Perferendis quisquam quidem, labore",
+         "vitae consequuntur laudantium! Animi",
+         "molestias dolorem, at qui numquam id asperiores labore",
+         "ullam ab. Accusamus itaque, ex recusandae consectetur",
+         "cumque quas sapiente, deleniti dolorem id",
+         "quaerat quam. Recusandae sint cumque distinctio",
+         "voluptatum ab at, maxime explicabo enim deserunt"
+    ];
     
-    //var box = d3.util.getTBox(["Lorem ipsum", "dolor sit amet,", "consectetur."]);
-    var box = d3.util.getTBox("Lorem ipsum dolor sit amet, consectetur.");
-    console.log(box);
+    var type = ["circle", "cross", "diamond", "square", "triangle-down", "triangle-up"];
+    
+    dd = dd.map (function(d) {
+        return { text: d, symbol: type[Math.round(Math.random() * 6)] }
+    });
+    
+
+    var legend = d3.util.legend()
+        .data(dd, function (d) { return d.text; })
+        .symbol(function (d) { return d.symbol; })
+        .rowSpan(10)
+        .title("I Love This")
+        .symbolSize(100)
+        .symRight(10)
+        .color(function (d, i) { return cc(i); });
+    
+    var g = d3.select("#container")
+        .append("svg")
+        .attr({
+            width: Math.ceil(legend.getWidth()) + 20,
+            height: Math.ceil(legend.getHeight()) + 20,
+        })
+        .append("g")
+        .attr("transform", "translate(10,10)");
+    
+    g.call(legend);
+    
+    
 </script>
 </body>
 </html>
