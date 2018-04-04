@@ -4,21 +4,25 @@
 // https://bost.ocks.org/mike/chart/
 (function (d3, document) {
     
-    // if d3 is not loaded just return
-    if (!d3) { return; }
+    if (!d3 || !d3.version.match(/3[.\d]+/)) {
+        return console.log("%cd3 is not loaded or the version of \"3.x\"!",
+                           "background: green; color: red; font-size: 30px;");
+    }
     
-    d3.util = {
-        extend: function (target, source) {
-            var pp;
-            for (pp in source) {
-                if (source.hasOwnProperty(pp)) {
-                    target[pp] = source[pp];
-                }
+    /* ------------ utility functions ------------ */
+    // shallow copy properties form "source" to "target"
+    var extend  = function (target, source) {
+        var pp;
+        for (pp in source) {
+            if (source.hasOwnProperty(pp)) {
+                target[pp] = source[pp];
             }
-            
-            return target;
-        },
-        getTBox: function (texts, style) {
+        }
+        return target;
+    };
+    
+    // getBBox from one or more texts
+    var getTBox = function (texts, style) {
             if(!style) { style = {"font": "12px arial, sans-serif"}; }
             var svg = d3.select(document.body)
                 .append("svg")
@@ -33,7 +37,7 @@
             var msg = null, box;
             
             // if texts is an array of text
-            if (Array.isArray(texts)) {
+            if (texts.map) {
                 msg = [];
                 svg.selectAll("text")
                     .data(texts)
@@ -56,226 +60,328 @@
             svg.remove();
             
             return msg;
-        },
-        legend: legend,
-        streamLegend: streamLegend
+        };
+    
+    // constructor "T" inherited from constructor "S" 
+    var inherit = function (T, S) {
+        function F () {}
+        F.prototype = S.prototype;
+        T.prototype = new F();
+        T.prototype.constructor = T;
+    };
+    var sqrt = Math.sqrt;
+    
+    // base legend constructior
+    function BaseLegend () {
+        this._width      = null;
+        this._height     = null;
+        this._fontStyle  = {"font": "12px arial, sans-serif"};
+        this._rowHeight  = 0; // un-configurable
+        this._textHeight = 0; // un-configurable
+        this._rowSpan    = 5;
+        this._title      = "";
+
+        this._symbol     = "square"; // string or accessor function
+        this._symbolSize = 64;
+        this._symRight   = 5;
+        this._color      = "blue";   // string or accessor function
+
+        this._data       = [];
+        this._dataAcc    = function (d) { return d; };
+    }
+
+    BaseLegend.prototype.fontStyle = function (val) {
+        if (!arguments.length) { return this._fontStyle; }
+
+        this._fontStyle = val;
+        this.flush();
+        return this;
+    };
+    
+    BaseLegend.prototype.rowSpan = function (val) {
+        if (!arguments.length) { return this._rowSpan; }
+
+        this._rowSpan = val;
+        this.flush();
+        return this;
+    };
+
+    BaseLegend.prototype.title = function (val) {
+        if (!arguments.length || (typeof val !== "string")  || (val.length < 1)) {
+                return this._title;
+        }
+
+        this._title = val.trim();
+        this.flush();
+        return this;
+    };
+
+    BaseLegend.prototype.symbol = function (val) {
+        if (!arguments.length) { return this._symbol; }
+
+        this._symbol = val;
+        return this;
+    };
+
+    BaseLegend.prototype.symbolSize = function (val) {
+        if (!arguments.length) { return this._symbolSize; }
+
+        this._symbolSize = val;
+        this.flush();
+        return this;
+    };
+
+    BaseLegend.prototype.symRight = function (val) {
+        if (!arguments.length) { return this._symRight; }
+
+        this._symRight = val;
+        this.flush();
+        return this;
+    };
+
+    BaseLegend.prototype.color = function (val) {
+        if (!arguments.length) { return this._color; }
+
+        this._color = val;
+        return this;
+    };
+
+    BaseLegend.prototype.data = function (arr, accessor) {
+        if (!arguments.length || !arr.map) { return this._data; }
+
+        this._data = arr;
+        if ((typeof accessor) === "function") { this._dataAcc = accessor; }
+        this.flush();
+        return this;
+    };
+
+    // erase "width" & "heigth" properties which should be re-calculated
+    BaseLegend.prototype.flush = function () {
+        this._width  = null;
+        this._height = null;
     };
 
 
 
-    function legend () {
-        var width      = null,
-            height     = null,
-            fontStyle  = {"font": "12px arial, sans-serif"},
-            rowHeight  = 0, // can not configurable
-            textHeight = 0, // can not configurable
-            rowSpan    = 5,
-            title      = "",
-            
-            symbol     = "square", // string or accessor function
-            symbolSize = 64,
-            symRight   = 5,
-            color      = "blue", // string or accessor function
 
-            data       = [],
-            dataAcc    = function (d) { return d; };
-        
-        var sym = d3.svg.symbol();
+    /* ---------- legend vertical layout ---------- */
+    function VerticalLegend () {
+        BaseLegend.apply(this, Array.prototype.slice(arguments));
+    }
 
-        function draw (ss) {
-            if (!data.length) { return; }
-            //var ss = d3.select(this);
-            
-            var tt = 0;
-            if (title.length > 1) {
-                tt = textHeight + rowSpan;
-                ss.append("text")
-                    .style("font", fontStyle)
-                    .text(title)
-                    .attr("transform", "translate(0," + textHeight + ")");
-            }
-            
-            ss.style(fontStyle)
-              .selectAll("g")
-              .data(data)
-              .enter()
-              .append("g")
-              
-              .each(function (dd, ii) {
-                 var self = d3.select(this);
-                 self.attr("transform", "translate(0," + (ii * (rowHeight + rowSpan) + tt + rowSpan) + ")");
-                 
-                 self.append("path").attr({
-                     fill     : typeof color === "string" ? color : color(dd, ii),
-                     transform: "translate(" + (Math.sqrt(symbolSize) * 0.5) + ",0)",
-                     d        : sym.type(typeof symbol === "string" ? symbol : symbol(dd, ii)).size(symbolSize)()
-                 });
-                
-                 self.append("text")
-                     .text(dataAcc)
-                     .attr("transform", "translate(" +
-                           [Math.sqrt(symbolSize) + symRight, Math.sqrt(symbolSize) * 0.5] +
-                           ")");
-              });
+    inherit(VerticalLegend, BaseLegend);
+
+    VerticalLegend.prototype.size = function () {
+        if (this._width) {
+            return { width: this._width, height: this._height };
         }
 
-        draw.fontStyle = function (val) {
-            if (!arguments.length) { return fontStyle; }
+        var textBox, titleBox;
+        textBox  = getTBox(this._data.map(this._dataAcc), this._fontStyle);
+        titleBox = getTBox(this._title, this._fontStyle);
 
-            fontStyle = val;
-            draw.flush();
-            return draw;
-        };
+        this._textHeight = textBox[0].height;
+        this._rowHeight  = Math.max(this._textHeight, sqrt(this._symbolSize));
 
-        draw.rowSpan = function (val) {
-            if (!arguments.length) { return rowSpan; }
+        this._width = Math.max(titleBox.width,
+                d3.max(textBox.map(function(d){ return d.width; })) +
+                sqrt(this._symbolSize) +
+                this._symRight);
+        this._height = this._textHeight +
+                (this._rowHeight + this._rowSpan) * this._data.length +
+                0.5 * sqrt(this._symbolSize);
 
-            rowSpan = val;
-            draw.flush();
-            return draw;
-        };
-        draw.title = function (val) {
-            if (!arguments.length || (typeof val !== "string")  || (val.length < 1)) { return title; }
+        return { width: this._width, height: this._height };
+    };
 
-            title = val.trim();
-            draw.flush();
-            return draw;
-        };
-        
-        draw.symbol = function (val) {
-            if (!arguments.length) { return symbol; }
+    VerticalLegend.prototype.draw = function (ss) {
+        if (!this._data.length) { return; }
 
-            symbol = val;
-            return draw;
-        };
+        var sym = d3.svg.symbol();
+        var ts = this, tt = 0;
 
-        draw.symbolSize = function (val) {
-            if (!arguments.length) { return symbolSize; }
+        if (this._title.length > 0) {
+            tt = this._textHeight + this._rowSpan;
+            ss.append("text")
+                .text(this._title)
+                .attr("transform", "translate(0," + this._textHeight + ")");
+        }
 
-            symbolSize = val;
-            draw.flush();
-            return draw;
-        };
-        
-        draw.symRight = function (val) {
-            if (!arguments.length) { return symRight; }
+        ss.style(this._fontStyle)
+          .selectAll("g")
+          .data(this._data)
+          .enter()
+          .append("g")
+          .each(function (dd, ii) {
+             var self = d3.select(this);
 
-            symRight = val;
-            draw.flush();
-            return draw;
-        };
-        
-        draw.color = function (val) {
-            if (!arguments.length) { return color; }
+             sym.type(typeof ts._symbol === "string" ? ts._symbol : ts._symbol(dd, ii))
+                .size(ts._symbolSize);
 
-            color = val;
-            draw.flush();
-            return draw;
-        };
-        
-        draw.data = function (array, accessor) {
-            if (!arguments.length) { return data; }
+             self.attr("transform",
+                    "translate(0," + (ii * (ts._rowHeight + ts._rowSpan) + tt + ts._rowSpan) + ")");
+             self.append("path").attr({
+                 fill      : typeof ts._color === "string" ? ts._color : ts._color(dd, ii),
+                 transform : "translate(" + (sqrt(ts._symbolSize) * 0.5) + ",0)",
+                 d         : sym()
+             });
 
-            data = array;
-            if ((typeof accessor) === "function") { dataAcc = accessor; }
-            draw.flush();
-            return draw;
-        };
+             self.append("text")
+                 .text(dd.text)
+                 .attr("transform", "translate(" +
+                       [sqrt(ts._symbolSize) + ts._symRight, sqrt(ts._symbolSize) * 0.5] +
+                       ")");
+          });
+    };
 
-        // erase "width" & "heigth" properties which should be re-calculated
-        draw.flush = function () {
-            width  = null;
-            height = null;
-        };
-        
-        draw.getWidth = function () {
-            // retrun the cached value
-            if (width) { return width; }
-            
-            var textBox, titleBox;
-            textBox = d3.util.getTBox(data.map(dataAcc), fontStyle);
-            titleBox = d3.util.getTBox(title, fontStyle);
-            
-            textHeight = textBox[0].height;
-            rowHeight = Math.max(textHeight, Math.sqrt(symbolSize));
-            
-            width = Math.max(titleBox.width,
-                      d3.max(textBox.map(function(d){ return d.width; })) + Math.sqrt(symbolSize) + symRight);
-            
-            return width;
-        };
-        
-        draw.getHeight = function () {
-            // retrun the cached value
-            if (height) { return height; }
-            
-            if (rowHeight) { draw.getWidth(); }
-            height = textHeight + (rowHeight + rowSpan) * data.length + 0.5 * Math.sqrt(symbolSize);
-            return height;
-        };
-        
-        return draw;
-    }
+
     
-    function streamLegend () {
-        var width = 100,
-            height = 100;
+    /* ---------- stream layout legend ---------- */
+    function StreamLegend () {
+        BaseLegend.apply(this, Array.prototype.slice(arguments));
         
-        function draw (ss) {}
+        // overwrite the default "_width"
+        this._width    = 150;
         
-        return draw;
+        // add new properties
+        this._nodes    = [];
+        this._itemSpan = 5;
+        this._row      = 1;
     }
+    inherit(StreamLegend, BaseLegend);
+    
+    StreamLegend.prototype.size = function () {
+        if (!this._data.length) { return null; }
 
-    function GradientBar (opt) {}
+        if (this._height && this._nodes.length) {
+            return { width: this._width, height: this._height };
+        }
+        this.getNodes();
+        this._height = this._row * (this._rowHeight + this._rowSpan);
 
+        return { width: this._width, height: this._height };
+    };
+    
+    StreamLegend.prototype.width = function (val) {
+        if (!arguments.length) { return this._width; }
+        
+        this._width  = val;
+        this.flush();
+        return this;
+    };
+    
+    StreamLegend.prototype.itemSpan = function (val) {
+        if (!arguments.length) { return this._itemSpan; }
+        
+        this._itemSpan  = val;
+        this.flush();
+        return this;
+    };
+    
+    StreamLegend.prototype.getNodes = function () {
+        if (this._nodes.length > 0) { return this._nodes; }
 
-})(d3, document);
+        var textBox, titleBox,
+            symSize = sqrt(this._symbolSize);
 
+        textBox = getTBox(this._data.map(this._dataAcc), this._fontStyle);
+        if (!this._title) {
+            titleBox = { text: "", width: 0, heigth: 0 };
+        } else {
+            titleBox = getTBox(this._title, this._fontStyle);
+        }
 
+        // rowHeight
+        this._rowHeight = Math.max(textBox[0].height, symSize);
 
+        // implement new properties
+        this._nodes = this._data.map(function (d, i) {
+            var tWidth  = textBox[i].width;
 
+            return {
+                text  : textBox[i].text,
+                width : tWidth + symSize + this._symRight,
+                height: this._rowHeight,
+                x     : 0,
+                y     : 0,
+                value : d
+            };
+        }, this);
 
+        var x = 0, y = 0;
+        this._nodes.forEach(function (d) {
+            if ((d.width + x) < this._width) {
+                d.x = x;
+                d.y = y;
+                x   = d.width + x + this._itemSpan;
+            } else {
+                this._row += 1;
+                x   = 0;
+                y   = (this._rowHeight + this._rowSpan) * (this._row - 1);
+                d.x = x;
+                d.y = y;
+                x   = d.width + x + this._itemSpan;
+            }
+        }, this);
 
+        return this._nodes;
+    };
 
+    // reasign flush function
+    StreamLegend.prototype.flush = function () {
+        this._height = null;
+        this._nodes = [];
+    };
 
+    StreamLegend.prototype.draw = function (ss) {
+        if (!this._data.length) { return; }
 
+        var sym = d3.svg.symbol();
+        var ts = this, tt = 0;
 
+        ss.style(this._fontStyle);
+        if (this._title.length > 0) {
+            tt = this._textHeight + this._rowSpan;
+            ss.append("text")
+                .text(this._title)
+                .attr("transform", "translate(0," + this._textHeight + ")");
+        }
 
+        ss.selectAll("g")
+          .data(this.getNodes())
+          .enter()
+          .append("g")
+          .each(function (dd, ii) {
+             var self = d3.select(this);
+             sym.type(typeof ts._symbol === "string" ? ts._symbol : ts._symbol(dd.value, ii))
+                .size(ts._symbolSize);
 
+             self.attr("transform",
+                    "translate(" + [dd.x, dd.y + tt + ts._rowSpan] + ")");
+             self.append("path").attr({
+                 fill      : typeof ts._color === "string" ? ts._color : ts._color(dd.value, ii),
+                 transform : "translate(" + (sqrt(ts._symbolSize) * 0.5) + ",0)",
+                 d         : sym()
+             });
 
+             self.append("text")
+                 .text(dd.text)
+                 .attr("transform", "translate(" +
+                       [sqrt(ts._symbolSize) + ts._symRight, sqrt(ts._symbolSize) * 0.5] +
+                       ")");
+          });
+    };
 
+    
+    
+    d3.util = {
+        extend:  extend,
+        getTBox: getTBox,
+        inherit: inherit,
+        vLegend: function () { return new VerticalLegend(); },
+        sLegend: function () { return new StreamLegend(); }
+    };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}) (typeof d3 == "undefined" ? null : d3, document);
 
 

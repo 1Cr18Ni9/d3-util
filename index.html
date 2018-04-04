@@ -7,7 +7,8 @@
     <script src="d3-util.js"></script>
 </head>
 <body>
-    <div id="container"></div>
+    <div id="vertical"></div>
+    <div id="stream"></div>
 <script>
     var cc = d3.scale.category10();
     var dd = [
@@ -24,30 +25,57 @@
     var type = ["circle", "cross", "diamond", "square", "triangle-down", "triangle-up"];
     
     dd = dd.map (function(d) {
-        return { text: d, symbol: type[Math.round(Math.random() * 6)] }
+        return { text: d, symbol: type[Math.round(Math.random() * 6)] };
     });
     
 
-    var legend = d3.util.legend()
+
+    var legend1 = d3.util.vLegend()
         .data(dd, function (d) { return d.text; })
         .symbol(function (d) { return d.symbol; })
         .rowSpan(10)
         .title("I Love This")
-        .symbolSize(100)
+        .symbolSize(84)
         .symRight(10)
         .color(function (d, i) { return cc(i); });
     
-    var g = d3.select("#container")
+    var g1 = d3.select("#vertical")
         .append("svg")
         .attr({
-            width: Math.ceil(legend.getWidth()) + 20,
-            height: Math.ceil(legend.getHeight()) + 20,
+            width: Math.ceil(legend1.size().width) + 20,
+            height: Math.ceil(legend1.size().height) + 20,
         })
         .append("g")
         .attr("transform", "translate(10,10)");
     
-    g.call(legend);
+    //g.call(legend);
+    legend1.draw(g1);
     
+    
+    
+    
+    var legend2 = d3.util.sLegend()
+        .data(dd, function (d) { return d.text; })
+        .symbol(function (d) { return d.symbol; })
+        .rowSpan(10)
+        .title("I Love This")
+        .symbolSize(84)
+        .symRight(10)
+        .width(800)
+        .itemSpan(15)
+        .color(function (d, i) { return cc(i); });
+    
+    var g2 = d3.select("#stream")
+        .append("svg")
+        .attr({
+            width: Math.ceil(legend2.size().width) + 20,
+            height: Math.ceil(legend2.size().height) + 20,
+        })
+        .append("g")
+        .attr("transform", "translate(10,10)");
+    
+    //g.call(legend.draw.bind(legend));
+    legend2.draw(g2);
     
 </script>
 </body>
