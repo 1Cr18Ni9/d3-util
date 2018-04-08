@@ -194,7 +194,7 @@
         return { width: this._width, height: this._height };
     };
 
-    VerticalLegend.prototype.draw = function (ss) {
+    function verticalDraw (ss) {
         if (!this._data.length) { return; }
 
         var sym = d3.svg.symbol();
@@ -232,7 +232,7 @@
                        [sqrt(ts._symbolSize) + ts._symRight, sqrt(ts._symbolSize) * 0.5] +
                        ")");
           });
-    };
+    }
 
 
     
@@ -333,7 +333,7 @@
         this._nodes = [];
     };
 
-    StreamLegend.prototype.draw = function (ss) {
+    function streamDraw (ss) {
         if (!this._data.length) { return; }
 
         var sym = d3.svg.symbol();
@@ -370,16 +370,27 @@
                        [sqrt(ts._symbolSize) + ts._symRight, sqrt(ts._symbolSize) * 0.5] +
                        ")");
           });
-    };
+    }
 
-    
+    function bindThis (type) {
+        var obj;
+        if (type == "VerticalLegend") {
+            obj = new VerticalLegend();
+            obj.draw = verticalDraw.bind(obj);
+        } else if (type == "StreamLegend") {
+            obj = new StreamLegend();
+            obj.draw = streamDraw.bind(obj);
+        }
+        
+        return obj;
+    }
     
     d3.util = {
         extend:  extend,
         getTBox: getTBox,
         inherit: inherit,
-        vLegend: function () { return new VerticalLegend(); },
-        sLegend: function () { return new StreamLegend(); }
+        vLegend: function () { return bindThis("VerticalLegend"); },
+        sLegend: function () { return bindThis("StreamLegend"); }
     };
 
 }) (typeof d3 == "undefined" ? null : d3, document);

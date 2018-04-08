@@ -12,7 +12,8 @@
 <script>
     var cc = d3.scale.category10();
     var dd = [
-        "Lorem ipsum dolor sit amet, consectetur adipisicing elit",
+        "Lorem ipsum dolor sit amet, ",
+        "consectetur adipisicing elit",
          "Perferendis quisquam quidem, labore",
          "vitae consequuntur laudantium! Animi",
          "molestias dolorem, at qui numquam id asperiores labore",
@@ -48,7 +49,7 @@
         .append("g")
         .attr("transform", "translate(10,10)");
     
-    //g.call(legend);
+    //g1.call(legend1.draw);
     legend1.draw(g1);
     
     
@@ -74,8 +75,8 @@
         .append("g")
         .attr("transform", "translate(10,10)");
     
-    //g.call(legend.draw.bind(legend));
-    legend2.draw(g2);
+    g2.call(legend2.draw);
+    //legend2.draw(g2);
     
 </script>
 </body>
