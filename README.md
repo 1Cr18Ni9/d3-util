@@ -30,6 +30,7 @@ Return how much space a text or texts can ocupied at the specified *style*.
   
 ### <a name="util_vlegend" href="#util_vlegend">#</a> d3.util.<b>vLegend</b> ()
 ![vertical legend](https://raw.githubusercontent.com/1cr18ni9/d3-util/master/vertical-legend.png)
+
 Constructs a new vertical layout legend.
 
 Following basic methods are shared with stream legend, which will return the legend instance itself if *val* is specified:
