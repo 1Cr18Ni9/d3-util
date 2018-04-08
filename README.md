@@ -29,6 +29,7 @@ Return how much space a text or texts can ocupied at the specified *style*.
   ```
   
 ### <a name="util_vlegend" href="#util_vlegend">#</a> d3.util.<b>vLegend</b> ()
+![vertical legend](https://raw.githubusercontent.com/1cr18ni9/d3-util/master/vertical-legend.png)
 Constructs a new vertical layout legend.
 
 Following basic methods are shared with stream legend, which will return the legend instance itself if *val* is specified:
@@ -89,7 +90,7 @@ After configuration of this legend, just simply revoke like this: *selection.cal
 
 
 ### <a name="util_slegend" href="#util_slegend">#</a> d3.util.<b>sLegend</b> ()
-
+![stream legend](https://raw.githubusercontent.com/1cr18ni9/d3-util/master/stream-legend.png)
 
 #### legend.size()
 Return the dimmension of the legend, like this: *{ width: 123.5, height: 75.3 }*. If the dimmension is pre-calculated this function will return the catched.
