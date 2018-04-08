@@ -5,9 +5,13 @@
 (function (d3, document) {
     
     if (!d3 || !d3.version.match(/3[.\d]+/)) {
-        return console.log("%cd3 is not loaded or the version of \"3.x\"!",
+        return console.log("%cd3 is not loaded or not the version of \"3.x\"!",
                            "background: green; color: red; font-size: 30px;");
     }
+    
+    // In case of multipe reload
+    if (d3.util) { return; }
+    
     
     /* ------------ utility functions ------------ */
     // shallow copy properties form "source" to "target"

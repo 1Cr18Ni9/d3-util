@@ -1,7 +1,6 @@
 # d3-util
-A collection of utilities for drawing legend.
+A collection of utilities based on `d3.v3.x` for drawing legend.
 
-### Features:
 
 ## Features:
 - familiar syntax with d3 and simple to use
