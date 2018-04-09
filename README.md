@@ -8,6 +8,17 @@ A collection of utilities based on `d3.v3.x` for drawing legend.
 - [d3.util.sLegend](#util_slegend) will give a stream-like legend layout
 - other useful utilities
 
+
+## Install
+```html
+<head>
+    <meta charset="UTF-8">
+    <script src="source/d3-v3.5.17.min.js"></script>
+    <script src="d3-util.js"></script>
+</head>
+```
+
+
 ## API
 
 ### <a name="util_extend" href="#util_extend">#</a> d3.util.<b>extend</b> (*target*, *source*)

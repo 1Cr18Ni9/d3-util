@@ -8,6 +8,15 @@
 - [d3.util.sLegend](#util_slegend) 图例流（根据指定宽度自动调整，自适应吧）
 - 其他功能
 
+## 安装
+```html
+<head>
+    <meta charset="UTF-8">
+    <script src="source/d3-v3.5.17.min.js"></script>
+    <script src="d3-util.js"></script>
+</head>
+```
+
 ## API接口
 
 ### <a name="util_extend" href="#util_extend">#</a> d3.util.<b>extend</b> (*target*, *source*)
